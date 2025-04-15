@@ -1,0 +1,88 @@
+from time import time
+from utils import get_rect_p, get_timestamps, budget_rho_rem, Bvec_init, get_traj_dt
+from CGP.algo import  PRCIE_ind_loc_log, RCBase0, RCBase1, PRCIE_ind_log
+from functions import test_rc
+
+seeds = [671699,404319,998989,359929,49476,595156,223117,151713,120599,667129,
+         605670,230411,795855,806754,545833,937190,872856,525670,546160,533717,
+         140433,992065,919414,765444,733413,734106,776657,364152,220876,319918,
+         130497,797149,518946,284234,407580,272654,370548,568411,699434,980203,
+         969085,37285,117035,660304,67712,47542,423526,50987,470237,434592,
+         525877,35680,876106,476998,958038,950325,105053,319378,755000,40678,
+         866879,335541,132281,911304,55527,239913,937134,710041,641104,438579,
+         233801,706423,18704,215578,865384,14358,569534,271379,430730,205027,
+         399934,411173,962529,839612,660067,126737,385266,291856,228695,606999,
+         412613,404317,785437,852568,302887,967884,848324,439356,456031,952517,
+         950236,622703,955457,647613,541349,342394,440717,379990,343914,12787,
+         703169,187329,861646,676546,944832,396328,204506,980095,492045,322984,
+         348363,743197,52925,702415,755044,306070,257011,684017,901452,271711,
+         798697,672804,13444,584575,973838,831065,181896,285593,468487,487039,
+         692918,6924,780641,679504,587734,523230,812175,326566,180265,708938,
+         750508,906892,719133,254670,74682,588243,324680,27678,327404,350890,
+         923026,468148,618412,794855,601189,740039,565897,932212,315161,35062,
+         999086,569035,762359,191996,905852,280939,723700,769378,991758,513278,
+         583080,677639,340520,199974,726681,622556,504726,661320,205277,600649,
+         93648,746510,665731,244122,913047,641733,70286,440676,3311,189751,
+         658044,463437,260804,618129,681406,109109,628158,51909,241261,94887,
+         725413,791786,286181,538860,542382,311480,446136,499371,978442,777689,
+         64937,672949,675918,554618,504606,1432,327548,419006,463254,747770,
+         309179,912700,578212,426096,87014,148693,254814,999163,705433,336009,
+         768974,569961,589475,310511,593755,92669,648547,561521,911439,854298]
+
+seeds_rep = [230154,405172,609118,761676,639961,30780,944985,853241,638719,884397,
+             434740,723238,934113,570636,709492,271266,464312,5340,428972,676818,
+             356675,757023,310780,689497,516467,432430,27194,132196,299935,909217,
+             50555,321397,296416,877224,875287,21279,518271,344633,194126,890088,
+             537214,29928,916421,216265,88109,326497,550428,565212,556660,593184,
+             145918,932548,37573,273137,915889,215395,37012,589012,343145,948590,
+             106368,931883,12592,148824,584456,768998,388037,894941,409618,502488,
+             109827,951250,501123,364871,534332,897769,414458,19481,581536,420657,
+             258065,904150,165970,949990,901376,967010,133303,507963,99298,500320,
+             34327,384056,660604,26737,942809,890875,675872,304382,295408,631120]
+
+B = 0.0001#0.000005#0.002
+c = 10
+beta = 0.1
+folder0 = './results/test_rc_sq_w'
+params = 'c;B;m;beta;n;w;l;seed;seed_p;pois\n'+str(c)+';'+str(B)+';<m>;'+str(beta)+';<n>;<w>;<l>;<seed>;<seed_p>;<pois>'
+
+PRCIE_func_loc = lambda x,rhos,Bvec,func_proj,args: PRCIE_ind_loc_log(x,func_proj,c,rhos,beta,Bvec,args=[])
+PRCIE_func_dist = lambda x,rhos,Bvec,func_proj,args: PRCIE_ind_log(x,func_proj,c,rhos,beta,Bvec,args=args,b_adjust=True)
+func_base1 = lambda x,rhos,Bvec,func_proj,args: RCBase1(x,rhos,Bvec,func_proj,args=args,b_adjust=True)
+
+mech_cgp_base0 = ('CGP Base_loc',2,budget_rho_rem,RCBase0,Bvec_init,'brown','1',':')
+mech_cgp_base1 = ('CGP Base_dist',3,budget_rho_rem,func_base1,Bvec_init,'orange','+',(0, (3, 5, 1, 5, 1, 5)))
+
+mech_cgp_prcie_loc = ('CGP PRCIE_loc',4,budget_rho_rem,PRCIE_func_loc,Bvec_init,'green','*','--')
+mech_cgp_prcie_dist  = ('CGP PRCIE_dist',5,budget_rho_rem,PRCIE_func_dist,Bvec_init,'steelblue','h','-.')
+
+mechs = [mech_cgp_base0,mech_cgp_base1,mech_cgp_prcie_loc,mech_cgp_prcie_dist]
+
+ws = [2450,2800,3150,3450,3750]
+ls = [2450,2800,3150,3450,3750]
+hs = [6,9,12,15,18,21,0,3] # m=7x8
+# hs = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0] # m=7x24
+# hs = [6,14,22] # m=7x3
+
+run_range = range(0,50)
+tick = time()
+print('Starting test_rc_taxi_sq_w for range'+str(run_range[0])+' - '+str(run_range[-1]))
+assert(run_range[-1]*len(ws)<=len(seeds))
+
+filename_in = './data/TDrive_traj_dt.txt'#'./data/samp_taxi'# 
+times = get_timestamps(dsname='TDrive', hs=hs)
+arr_times = [str(dt) for dt in times]
+dict_traj = get_traj_dt(filename_in, arr_times)
+for jrep in run_range:
+    seed_p = seeds_rep[-(jrep+1)]
+    ps = get_rect_p(len(arr_times),cw=15,seed=seed_p)#,x_min = 1.287e7,x_max = 1.302e7,y_min = 4.77e6,y_max = 4.92e6,seed=seed_p)
+    for j in range(len(ws)):
+        w = ws[j]
+        l = ls[j]
+        seed = seeds[jrep*5+j]
+        folder_out = folder0+'_w'+str(w)+'_l'+str(l)+'_rep'+str(jrep)
+        params_in = params.replace('<w>',str(w)).replace('<l>',str(l)).replace('<seed>',str(seed)).replace('<seed_p>',str(seed_p))
+        test_rc(dict_traj,times,B,seed,ps, rect_w=w,rect_l=l,params_in=params_in,mechs=mechs,folder_out0=folder_out,b_interim=False,b_analysis=True)
+print('Finished. Results saved to '+ folder0 +'; Time elapsed: ',time() - tick)
+
+
