@@ -118,7 +118,7 @@ def get_timestamps_taxi(hs=[12,16,20]):
 
 dsname = 'TDrive'
 folder_out='./data/'
-filename_out = folder_out+dsname+'_traj_dt111.txt'
+filename_out = folder_out+dsname+'_traj_dt.txt'
 
 folder_in = './data/taxi_log_2008_by_id/'
 extract_func = extract_taxi_data_fromfile
